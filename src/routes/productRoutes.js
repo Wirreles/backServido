@@ -5,6 +5,8 @@ const {
   getProductById,
   updateProduct,
   deleteProduct,
+  getProductsByUserId,
+  getInactiveProductsByUserId
 } = require("../controllers/productControllers");
 
 const router = express.Router();
@@ -18,10 +20,17 @@ router.post("/create", createProduct);
 // Ruta para obtener un producto por ID
 router.get("/:id", getProductById);
 
+// Ruta para obtener productos por userId
+router.get("/user/:id", getProductsByUserId);
+
 // Ruta para actualizar un producto
 router.put("/:id", updateProduct);
 
 // Ruta para eliminar un producto
 router.delete("/:id", deleteProduct);
+
+// Ruta para obtener productos inactivos por userId
+router.get("/user/:userId/inactive", getInactiveProductsByUserId);
+
 
 module.exports = router;

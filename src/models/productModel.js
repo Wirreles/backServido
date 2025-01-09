@@ -9,6 +9,8 @@ export const createProductObject = (data) => {
       // variants: data.variants || [], 
       stock: data.stock || 0, // Stock disponible
       brand: data.brand || '',
+      userId: data.userId || '',
+      isActive: data.isActive,
     };
   };
   

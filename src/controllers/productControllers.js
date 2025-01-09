@@ -30,7 +30,7 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ error: "El cuerpo de la solicitud está vacío." });
     }
 
-    const { title, price, category, images, description, stock, brand } = req.body;
+    const { title, price, category, images, description, stock, brand , userId, isActive } = req.body;
 
     if (!title || !price || !category || !images) {
       console.error("Datos faltantes:", req.body);
@@ -52,7 +52,8 @@ const createProduct = async (req, res) => {
       brand,
       description: description || "",
       stock: stock || 0,
-      // createdAt: new Date().toISOString(), 
+      userId,
+      isActive
     };
 
     // Guardar en Firestore
@@ -114,6 +115,65 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// Obtener productos por userId
+const getProductsByUserId = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const productsSnapshot = await db
+      .collection("products")
+      .where("userId", "==", id)
+      .get();
+
+    if (productsSnapshot.empty) {
+      return res.status(404).json({ error: "No se encontraron productos para este usuario." });
+    }
+
+    const products = productsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Error obteniendo productos por userId:", error.message);
+    res.status(500).json({ error: "Error obteniendo productos por userId." });
+  }
+};
+
+const checkProductInOrders = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const ordersSnapshot = await db.collection('orders').where('productId', '==', id).get();
+    const isLinked = !ordersSnapshot.empty;
+    res.status(200).json(isLinked);
+  } catch (error) {
+    console.error('Error comprobando producto en órdenes:', error.message);
+    res.status(500).json({ error: 'Error comprobando producto en órdenes.' });
+  }
+};
+
+const getInactiveProductsByUserId = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const productsSnapshot = await db
+      .collection("products")
+      .where("userId", "==", userId)
+      .where("isActive", "==", false)
+      .get();
+
+    const products = productsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Error obteniendo productos inactivos:", error.message);
+    res.status(500).json({ error: "Error obteniendo productos inactivos." });
+  }
+};
+
+
 // Exportar funciones
 module.exports = {
   getProducts,
@@ -121,4 +181,7 @@ module.exports = {
   getProductById,
   updateProduct,
   deleteProduct,
+  getProductsByUserId,
+  getInactiveProductsByUserId,
+  checkProductInOrders
 };
