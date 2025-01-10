@@ -4,17 +4,48 @@ const { v4: uuidv4 } = require('uuid');
 // Obtener todos los productos
 const getProducts = async (req, res) => {
   try {
-    const querySnapshot = await db.collection("products").get();
+    // Obtener los parámetros de consulta
+    const { category, minPrice, maxPrice, brand, search } = req.query;
 
-    if (querySnapshot.empty) {
-      console.log("No se encontraron productos en la colección 'products'.");
-      return res.status(404).json({ message: "No se encontraron productos." });
+    let query = db.collection("products");
+
+    // Aplicar filtros dinámicamente según los parámetros recibidos
+    if (category) {
+      query = query.where("category", "==", category);
     }
 
-    const products = querySnapshot.docs.map((doc) => ({
+    if (brand) {
+      query = query.where("brand", "==", brand);
+    }
+
+    if (minPrice) {
+      query = query.where("price", ">=", parseFloat(minPrice));
+    }
+
+    if (maxPrice) {
+      query = query.where("price", "<=", parseFloat(maxPrice));
+    }
+
+    const querySnapshot = await query.get();
+
+    if (querySnapshot.empty) {
+      console.log("No se encontraron productos con los criterios especificados.");
+      return res.status(404).json({ message: "No se encontraron productos con los criterios especificados." });
+    }
+
+    let products = querySnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      products = products.filter(
+        (product) =>
+          product.title.toLowerCase().includes(searchLower) ||
+          product.description.toLowerCase().includes(searchLower)
+      );
+    }
 
     res.status(200).json(products);
   } catch (error) {
@@ -22,6 +53,7 @@ const getProducts = async (req, res) => {
     res.status(500).json({ error: "Error al obtener productos. Intente nuevamente más tarde." });
   }
 };
+
 
 const createProduct = async (req, res) => {
   try {
@@ -173,6 +205,62 @@ const getInactiveProductsByUserId = async (req, res) => {
   }
 };
 
+const createProductFeature = async (req, res) => {
+  // console.log("Body recibido:", req.body);
+
+  try {
+    const { productId, feature } = req.body;
+
+    if (!productId || !feature || !feature.label || !feature.value) {
+      return res.status(400).json({ error: "Faltan datos para crear la característica." });
+    }
+
+    const featureId = uuidv4(); // Generar un ID único para la característica
+
+    const featureData = {
+      id: featureId,
+      label: feature.label,
+      value: feature.value,
+    };
+
+    // Referencia a la subcolección 'features' del producto
+    const productRef = db.collection("products").doc(productId);
+    await productRef.collection("features").doc(featureId).set(featureData);
+
+    res.status(201).json({ message: "Característica creada exitosamente.", feature: featureData });
+  } catch (error) {
+    console.error("Error al crear característica:", error.message);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+};
+
+const getProductFeatures = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    if (!productId) {
+      return res.status(400).json({ error: "El ID del producto es requerido." });
+    }
+
+    const productRef = db.collection("products").doc(productId);
+    const featuresSnapshot = await productRef.collection("features").get();
+
+    if (featuresSnapshot.empty) {
+      return res.status(404).json({ error: "No se encontraron características para este producto." });
+    }
+
+    const features = featuresSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json(features);
+  } catch (error) {
+    console.error("Error al obtener características:", error.message);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+};
+
 
 // Exportar funciones
 module.exports = {
@@ -183,5 +271,7 @@ module.exports = {
   deleteProduct,
   getProductsByUserId,
   getInactiveProductsByUserId,
-  checkProductInOrders
+  checkProductInOrders,
+  createProductFeature,
+  getProductFeatures
 };

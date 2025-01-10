@@ -6,7 +6,9 @@ const {
   updateProduct,
   deleteProduct,
   getProductsByUserId,
-  getInactiveProductsByUserId
+  getInactiveProductsByUserId,
+  createProductFeature,
+  getProductFeatures
 } = require("../controllers/productControllers");
 
 const router = express.Router();
@@ -31,6 +33,12 @@ router.delete("/:id", deleteProduct);
 
 // Ruta para obtener productos inactivos por userId
 router.get("/user/:userId/inactive", getInactiveProductsByUserId);
+
+// Ruta para agregar características a un producto
+router.post("/:id/features", createProductFeature);
+
+router.get("/:productId/features", getProductFeatures);
+
 
 
 module.exports = router;
