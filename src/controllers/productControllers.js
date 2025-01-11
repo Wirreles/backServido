@@ -261,6 +261,69 @@ const getProductFeatures = async (req, res) => {
   }
 };
 
+const createProductReview = async (req, res) => {
+  try {
+    const { productId, review } = req.body;
+
+    if (
+      !productId || 
+      !review || 
+      !review.userId || 
+      !review.rating || 
+      !review.comment
+    ) {
+      return res.status(400).json({ error: "Faltan datos para crear la reseña." });
+    }
+
+    const reviewId = uuidv4(); // Generar un ID único para la reseña
+
+    const reviewData = {
+      id: reviewId,
+      userId: review.userId,
+      rating: review.rating,
+      comment: review.comment,
+      // createdAt: new Date().toISOString(), 
+    };
+
+    // Referencia a la subcolección 'reviews' del producto
+    const productRef = db.collection("products").doc(productId);
+    await productRef.collection("reviews").doc(reviewId).set(reviewData);
+
+    res.status(201).json({ message: "Reseña creada exitosamente.", review: reviewData });
+  } catch (error) {
+    console.error("Error al crear reseña:", error.message);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+};
+
+const getProductReviews = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    if (!productId) {
+      return res.status(400).json({ error: "El ID del producto es requerido." });
+    }
+
+    const productRef = db.collection("products").doc(productId);
+    const reviewsSnapshot = await productRef.collection("reviews").get();
+
+    if (reviewsSnapshot.empty) {
+      return res.status(404).json({ error: "No se encontraron reseñas para este producto." });
+    }
+
+    const reviews = reviewsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error("Error al obtener reseñas:", error.message);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+};
+
+
 
 // Exportar funciones
 module.exports = {
@@ -273,5 +336,7 @@ module.exports = {
   getInactiveProductsByUserId,
   checkProductInOrders,
   createProductFeature,
-  getProductFeatures
+  getProductFeatures,
+  createProductReview,
+  getProductReviews
 };

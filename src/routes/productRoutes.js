@@ -8,7 +8,9 @@ const {
   getProductsByUserId,
   getInactiveProductsByUserId,
   createProductFeature,
-  getProductFeatures
+  getProductFeatures,
+  createProductReview,
+  getProductReviews
 } = require("../controllers/productControllers");
 
 const router = express.Router();
@@ -39,6 +41,10 @@ router.post("/:id/features", createProductFeature);
 
 router.get("/:productId/features", getProductFeatures);
 
+// Ruta para agregar reseñas a un producto
+router.post("/:id/reviews", createProductReview);
 
+// Ruta para obtener las reseñas de un producto
+router.get("/:productId/reviews", getProductReviews);
 
 module.exports = router;
