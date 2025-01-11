@@ -10,7 +10,10 @@ const {
   createProductFeature,
   getProductFeatures,
   createProductReview,
-  getProductReviews
+  getProductReviews,
+  createProductFAQ,
+  getProductFAQs,
+  updateFAQResponse
 } = require("../controllers/productControllers");
 
 const router = express.Router();
@@ -46,5 +49,15 @@ router.post("/:id/reviews", createProductReview);
 
 // Ruta para obtener las reseñas de un producto
 router.get("/:productId/reviews", getProductReviews);
+
+// Ruta para crear una pregunta frecuente
+router.post("/:id/faqs", createProductFAQ);
+
+// Ruta para obtener las preguntas frecuentes de un producto
+router.get("/:productId/faqs", getProductFAQs);
+
+// Ruta para actualizar la respuesta de una pregunta frecuente
+router.put("/:productId/faqs/:faqId", updateFAQResponse);
+
 
 module.exports = router;

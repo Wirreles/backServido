@@ -323,6 +323,95 @@ const getProductReviews = async (req, res) => {
   }
 };
 
+// Crear una pregunta frecuente
+const createProductFAQ = async (req, res) => {
+  try {
+    const { productId, question } = req.body;
+    console.log("Datos recibidos en el backend:", { productId, question });
+
+    if (!productId || !question || !question.userId || !question.text) {
+      return res.status(400).json({ error: "Faltan datos para crear la pregunta frecuente." });
+    }
+
+    const faqId = uuidv4(); // Generar un ID único para la pregunta
+
+    const faqData = {
+      id: faqId,
+      productId: question.productId,
+      userId: question.userId,
+      text: question.text,
+      answer: null, // La respuesta será null inicialmente
+    };
+
+    // Referencia a la subcolección 'faqs' del producto
+    const productRef = db.collection("products").doc(productId);
+    await productRef.collection("faqs").doc(faqId).set(faqData);
+
+    res.status(201).json({ message: "Pregunta frecuente creada exitosamente.", faq: faqData });
+  } catch (error) {
+    console.error("Error al crear pregunta frecuente:", error.message);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+};
+
+// Obtener las preguntas frecuentes de un producto
+const getProductFAQs = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    if (!productId) {
+      return res.status(400).json({ error: "El ID del producto es requerido." });
+    }
+
+    const productRef = db.collection("products").doc(productId);
+    const faqsSnapshot = await productRef.collection("faqs").get();
+
+    if (faqsSnapshot.empty) {
+      return res.status(404).json({ error: "No se encontraron preguntas frecuentes para este producto." });
+    }
+
+    const faqs = faqsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json(faqs);
+  } catch (error) {
+    console.error("Error al obtener preguntas frecuentes:", error.message);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+};
+
+// Actualizar la respuesta de una pregunta frecuente
+const updateFAQResponse = async (req, res) => {
+  try {
+    const { productId, faqId } = req.params;
+    const { answer } = req.body;
+
+    if (!productId || !faqId || !answer) {
+      return res.status(400).json({ error: "Faltan datos para actualizar la respuesta." });
+    }
+
+    // Referencia a la pregunta frecuente en la subcolección 'faqs' del producto
+    const faqRef = db.collection("products").doc(productId).collection("faqs").doc(faqId);
+
+    // Verificar si la pregunta frecuente existe
+    const faqDoc = await faqRef.get();
+    if (!faqDoc.exists) {
+      return res.status(404).json({ error: "No se encontró la pregunta frecuente." });
+    }
+
+    // Actualizar la respuesta
+    await faqRef.update({
+      answer
+    });
+
+    res.status(200).json({ message: "Respuesta actualizada exitosamente." });
+  } catch (error) {
+    console.error("Error al actualizar la respuesta:", error.message);
+    res.status(500).json({ error: "Error interno del servidor." });
+  }
+};
 
 
 // Exportar funciones
@@ -338,5 +427,8 @@ module.exports = {
   createProductFeature,
   getProductFeatures,
   createProductReview,
-  getProductReviews
+  getProductReviews,
+  createProductFAQ,
+  getProductFAQs,
+  updateFAQResponse
 };
