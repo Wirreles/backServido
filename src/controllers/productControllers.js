@@ -413,6 +413,31 @@ const updateFAQResponse = async (req, res) => {
   }
 };
 
+const getDiscountedProducts = async (req, res) => {
+  try {
+    const productsSnapshot = await db
+      .collection("products")
+      .where("discount", ">", 0)
+      .get();
+
+    if (productsSnapshot.empty) {
+      return res.status(404).json({ error: "No se encontraron productos con descuento." });
+    }
+
+    const discountedProducts = productsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json(discountedProducts);
+  } catch (error) {
+    res.status(500).json({ error: "Error obteniendo productos con descuento." });
+  }
+};
+
+
+
+
 
 // Exportar funciones
 module.exports = {
@@ -430,5 +455,6 @@ module.exports = {
   getProductReviews,
   createProductFAQ,
   getProductFAQs,
-  updateFAQResponse
+  updateFAQResponse,
+  getDiscountedProducts
 };

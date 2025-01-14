@@ -11,6 +11,8 @@ export const createProductObject = (data) => {
       stock: data.stock || 0, // Stock disponible
       brand: data.brand || '',
       isActive: data.isActive,
+      discount: data.discount || 0,
+      discountPrice: data.discountPrice || 0,
     };
   };
   
