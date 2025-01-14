@@ -3,6 +3,7 @@ const path = require("path");
 const morgan = require("morgan");
 const cors = require("cors"); // Importar el paquete CORS
 const productRouter = require('../src/routes/productRoutes');
+const servicesRouter = require('../src/routes/serviceRoutes');
 const paymentRouter = require('../src/routes/paymetRoutes');
 const subscriptionRouter = require('../src/routes/subscriptionRoutes');
 const app = express();
@@ -19,13 +20,14 @@ app.use(express.urlencoded({ extended: false }));
 // Habilitar CORS
 app.use(cors());
 app.use(cors({
-    origin: "http://localhost:4200", // Reemplaza con el dominio permitido
+    origin: "*", // Reemplaza con el dominio permitido
     methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
     credentials: true, // Habilita las cookies si es necesario
   }));
   
 // Routes
 app.use('/products', productRouter);
+app.use('/services', servicesRouter);
 app.use('/payments', paymentRouter);
 app.use('/subscription', subscriptionRouter);
 

@@ -6,10 +6,10 @@ export const createProductObject = (data) => {
       category: data.category || '', // Categoría del producto
       price: data.price || 0, // Precio del producto
       description: data.description || '', // Descripción del producto
+      userId: data.userId || '',
       // variants: data.variants || [], 
       stock: data.stock || 0, // Stock disponible
       brand: data.brand || '',
-      userId: data.userId || '',
       isActive: data.isActive,
     };
   };
