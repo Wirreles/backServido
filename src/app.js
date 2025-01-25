@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const cors = require("cors"); // Importar el paquete CORS
 const productRouter = require('../src/routes/productRoutes');
 const servicesRouter = require('../src/routes/serviceRoutes');
+const userRouter = require('../src/routes/userRoutes');
 const paymentRouter = require('../src/routes/paymetRoutes');
 const subscriptionRouter = require('../src/routes/subscriptionRoutes');
 const app = express();
@@ -28,6 +29,7 @@ app.use(cors({
 // Routes
 app.use('/products', productRouter);
 app.use('/services', servicesRouter);
+app.use('/usuarios', userRouter);
 app.use('/payments', paymentRouter);
 app.use('/subscription', subscriptionRouter);
 

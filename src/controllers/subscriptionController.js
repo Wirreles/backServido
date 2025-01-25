@@ -6,10 +6,9 @@ const Preapproval = new mercadopago.PreApproval(mpSub);
 
 // Crear una suscripción
 const createSubscription = async (req, res) => {
-  const { email, userId } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ error: "El campo email es obligatorio." });
+  const { email, userId, price } = req.body;
+  if (!email || !price) {
+    return res.status(400).json({ error: "Los campos email y price son obligatorios." });
   }
 
   try {
@@ -19,12 +18,12 @@ const createSubscription = async (req, res) => {
       auto_recurring: {
         frequency: 1,
         frequency_type: "months",
-        transaction_amount: 100.0,
+        transaction_amount: price,
         currency_id: "ARS",
       },
       payer_email: email,
-      back_url: "https://puntoencuentro1-3.vercel.app/perfil/subastas",
-      notification_url: "https://backnodemp.onrender.com/sub_success",
+      back_url: "https://puntoencuentro1-3.vercel.app/", 
+      notification_url: "https://baca-2803-9800-b8ca-80a8-f567-d9f-7291-eb90.ngrok-free.app/subscription/webhook",
       status: "pending",
     };
 
@@ -35,6 +34,7 @@ const createSubscription = async (req, res) => {
       email,
       subscriptionId: response.id,
       subId: subscriptionRef.id,
+      price, // Guardar el precio en Firestore
       createdAt: new Date().toISOString(),
       userId,
     });
@@ -72,10 +72,6 @@ const handleSubscriptionWebhook = async (req, res) => {
     }
 
     const { external_reference, status } = subscriptionDetails;
-    if (status !== "authorized") {
-      console.warn(`Estado de la suscripción no es 'authorized': ${status}`);
-      return res.status(400).json({ error: `Estado de la suscripción inválido: ${status}` });
-    }
 
     if (!external_reference) {
       console.error("No se encontró 'external_reference' en los detalles de la suscripción");
@@ -95,18 +91,31 @@ const handleSubscriptionWebhook = async (req, res) => {
     const subscriptionDoc = subscriptionSnapshot.docs[0];
     const subscriptionRef = subscriptionDoc.ref;
 
-    await subscriptionRef.update({
-      status,
-      lastUpdated: new Date().toISOString(),
-    });
+    // Actualizar el estado según el valor de `status`
+    if (status === "authorized") {
+      await subscriptionRef.update({
+        status: "active",
+        lastUpdated: new Date().toISOString(),
+      });
+      console.log(`Suscripción activada exitosamente en Firestore: ${subscriptionRef.id}`);
+    } else if (status === "cancelled") {
+      await subscriptionRef.update({
+        status: "cancelled",
+        lastUpdated: new Date().toISOString(),
+      });
+      console.log(`Suscripción cancelada exitosamente en Firestore: ${subscriptionRef.id}`);
+    } else {
+      console.warn(`Estado de la suscripción no manejado: ${status}`);
+      return res.status(400).json({ error: `Estado de la suscripción no manejado: ${status}` });
+    }
 
-    console.log(`Suscripción actualizada exitosamente en Firestore: ${subscriptionRef.id}`);
     return res.status(200).json({ message: "Suscripción procesada exitosamente." });
   } catch (error) {
     console.error("Error procesando el webhook de suscripción:", error);
     return res.status(500).json({ error: "Error interno del servidor." });
   }
 };
+
 
 module.exports = {
   createSubscription,

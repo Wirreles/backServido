@@ -20,11 +20,11 @@ const createPreference = async (req, res) => {
               unit_price: price,
             },
           ],
-          back_urls: {
-            success: 'https://puntoencuentro1-3.vercel.app/perfil/compras',
-            failure: 'https://puntoencuentro1-3.vercel.app/perfil/',
-          },
-          auto_return: 'approved',
+          // back_urls: {
+          //   success: 'https://puntoencuentro1-3.vercel.app/perfil/compras',
+          //   failure: 'https://puntoencuentro1-3.vercel.app/perfil/',
+          // },
+          // auto_return: 'approved',
           notification_url: 'https://backnodemp.onrender.com/payment_success',
           external_reference: userId,
         },
