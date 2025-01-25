@@ -4,16 +4,15 @@ const mercadopago = require("mercadopago");
 
 const Preapproval = new mercadopago.PreApproval(mpSub);
 
-// Crear una suscripción
 const createSubscription = async (req, res) => {
-  const { email, userId, price } = req.body;
-  if (!email || !price) {
-    return res.status(400).json({ error: "Los campos email y price son obligatorios." });
+  const { email, userId, price, plan } = req.body; // Agregar el campo "plan"
+  if (!email || !price || !plan) { // Validar que el plan esté presente
+    return res.status(400).json({ error: "Los campos email, price y plan son obligatorios." });
   }
 
   try {
     const body = {
-      reason: "Suscripción estándar",
+      reason: `Suscripción ${plan}`, // Usar el plan en el motivo
       external_reference: userId,
       auto_recurring: {
         frequency: 1,
@@ -22,7 +21,7 @@ const createSubscription = async (req, res) => {
         currency_id: "ARS",
       },
       payer_email: email,
-      back_url: "https://puntoencuentro1-3.vercel.app/", 
+      back_url: "https://puntoencuentro1-3.vercel.app/",
       notification_url: "https://baca-2803-9800-b8ca-80a8-f567-d9f-7291-eb90.ngrok-free.app/subscription/webhook",
       status: "pending",
     };
@@ -35,6 +34,7 @@ const createSubscription = async (req, res) => {
       subscriptionId: response.id,
       subId: subscriptionRef.id,
       price, // Guardar el precio en Firestore
+      plan, // Guardar el plan en Firestore
       createdAt: new Date().toISOString(),
       userId,
     });
