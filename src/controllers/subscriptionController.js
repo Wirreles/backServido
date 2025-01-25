@@ -21,8 +21,8 @@ const createSubscription = async (req, res) => {
         currency_id: "ARS",
       },
       payer_email: email,
-      back_url: "https://puntoencuentro1-3.vercel.app/",
-      notification_url: "https://baca-2803-9800-b8ca-80a8-f567-d9f-7291-eb90.ngrok-free.app/subscription/webhook",
+      back_url: "https://servido.com.ar/",
+      notification_url: "https://backservido.onrender.com/subscription/webhook",
       status: "pending",
     };
 

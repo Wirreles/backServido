@@ -25,7 +25,7 @@ const createPreference = async (req, res) => {
           //   failure: 'https://puntoencuentro1-3.vercel.app/perfil/',
           // },
           // auto_return: 'approved',
-          notification_url: 'https://backnodemp.onrender.com/payment_success',
+          notification_url: 'https://backservido.onrender.com/payment_success',
           external_reference: userId,
         },
       });
@@ -72,7 +72,7 @@ const paymentWebhook = async (req, res) => {
       return res.status(400).json({ error: "Payment not approved or not found" });
     }
 
-    const { external_reference, transaction_amount, payer } = paymentInfo;
+    const { external_reference, payer } = paymentInfo;
 
     if (!external_reference) {
       console.error("No external reference found in payment info");
@@ -82,8 +82,8 @@ const paymentWebhook = async (req, res) => {
     console.log("External reference (winningUserId): ", external_reference);
 
     const auctionQuery = await db
-      .collection("subastas")
-      .where("winningUserId", "==", external_reference)
+      .collection("compras")
+      .where("userId", "==", external_reference)
       .where("isPaid", "==", false)
       .get();
 
@@ -97,20 +97,12 @@ const paymentWebhook = async (req, res) => {
     const { serviceId } = auctionData;
     const auctionRef = auctionDoc.ref;
 
-    console.log(`Auction ID: ${auctionDoc.id}, Service ID: ${serviceId}`);
-
     await auctionRef.update({
       isPaid: true,
       paymentDate: new Date(),
       status: "completed",
-      paidAmount: transaction_amount,
       payerEmail: payer?.email || null,
     });
-
-    const serviceRef = db.collection("services").doc(serviceId);
-    await serviceRef.update({ subastaWinner: true });
-
-    console.log(`Service successfully updated in Firestore: ${serviceRef.id}`);
 
     return res.status(200).json({ message: "Payment processed successfully" });
   } catch (error) {
